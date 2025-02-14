@@ -1,0 +1,350 @@
+---
+title: "all tide"
+author: "Brianna Hibner"
+date: "2023-10-08"
+output: html_document
+---
+
+```{r}
+# load packages
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+#working with time 
+library(lubridate)
+library(scales)
+library(cowplot)
+
+#rollmean is in the package zoo 
+library(zoo)
+
+```
+
+## Loading the data
+
+you have to manually go in and delete the words "logged" from un-useful columns
+and re name columns (hard to do in R)
+
+```{r}
+
+#loading the combined xcel sheet 
+tide02_BHSE1 <- readxl::read_xlsx("data/211_LAC_0223.xlsx", 
+    #skipping first line 
+    skip=1, 
+    col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+  #dropping Nas
+  drop_na()  |>
+    #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-02-13 08:20:00"))
+
+
+tide02_BHSE2 <- readxl::read_xlsx("data/372_LAC_0223.xlsx", 
+                               #skipping first line 
+                               skip=1,
+                               col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+   #dropping Nas
+  drop_na() |>
+      #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-02-13 08:20:00"))
+
+
+tide02_BHSE3 <- readxl::read_xlsx("data/678_LAC_0223.xlsx", 
+                               #skipping first line 
+                               skip=1,
+                               col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+   #dropping Nas
+  drop_na() |>
+      #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-02-13 08:20:00"))
+
+
+
+#loading the combined xcel sheet 
+tide05_BHSE1 <- readxl::read_xlsx("data/211_LAC_0523.xlsx", 
+                               #skipping first line 
+                               skip=1)|>
+   #dropping Nas
+  drop_na()
+
+tide05_BHSE2 <- readxl::read_xlsx("data/372_LAC_0523.xlsx", 
+                               #skipping first line 
+                               skip=1) |>
+   #dropping Nas
+  drop_na()
+
+tide05_BHSE3 <- readxl::read_xlsx("data/678_LAC_0523.xlsx", 
+                               #skipping first line 
+                               skip=1) |>
+   #dropping Nas
+  drop_na()
+
+#loading the combined xcel sheet 
+tide07_BHSE1 <- readxl::read_xlsx("data/211_LAC_0723.xlsx", 
+                               #skipping first line 
+                               skip=1) |>
+   #dropping Nas
+  drop_na() |>
+    #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-07-26 10:00:00"))
+
+tide07_BHSE2 <- readxl::read_xlsx("data/372_LAC_0723.xlsx", 
+                               #skipping first line 
+                               skip=1) |>
+   #dropping Nas
+  drop_na() |>
+    #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-07-26 10:00:00"))
+
+tide07_BHSE3 <- readxl::read_xlsx("data/678_LAC_0723.xlsx", 
+                 #skipping first line 
+                  skip=1) |>
+            #dropping Nas
+              drop_na() |>
+  #7/26/2023  9:20:00 AM
+   filter(datetime > ymd_hms("2023-07-26 10:00:00"))
+  
+```
+
+
+##Functions for data clean and processing
+
+noNegdepth ()   This is a function that replaces sub zero depths with 0s
+the data frame entered needs to be the data$depth to work!!
+returns list of values, thus pipe it to data$depth to do the old ~do si do~
+
+GimmeMeanLine()  This is a function that gives a rolling mean for 10 data points 
+
+```{r}
+#function for replacing negative values  
+noNegdepth <- function(df) {
+  #returning the line of values with 0's replaced
+  return(test<-ifelse(
+    #if the value is less than or equal to 0 
+    df <= 0,
+    #replace with a 0
+    0,
+    #and if not, give it the old razzle dazzle (OG value of depth)
+    df))
+}
+
+
+#function time 
+GimmeMeanLine <- function(df) {
+  return(ave10depth <- rollmean(df,10, fill = list(NA, NULL, NA)))
+}
+  
+
+#getting the experiment time from starting line
+exp_time <- function(df) {
+    #calling the experiment start time (first line)
+      start_time <- df[1]
+      return(as.numeric(difftime(df,start_time, units='hours')))
+
+}
+
+```
+
+
+##data clean (scrub a dub dub)
+```{r}
+#febuary tides 
+tide02_BHSE1$depth<- noNegdepth(tide02_BHSE1$depth)
+tide02_BHSE2$depth<- noNegdepth(tide02_BHSE2$depth)
+tide02_BHSE3$depth<- noNegdepth(tide02_BHSE3$depth)
+
+#may tides 
+tide05_BHSE1$depth<- noNegdepth(tide05_BHSE1$depth)
+tide05_BHSE2$depth<- noNegdepth(tide05_BHSE2$depth)
+tide05_BHSE3$depth<- noNegdepth(tide05_BHSE3$depth)
+
+#july tides
+tide07_BHSE1$depth<- noNegdepth(tide07_BHSE1$depth)
+tide07_BHSE2$depth<- noNegdepth(tide07_BHSE2$depth)
+tide07_BHSE3$depth<- noNegdepth(tide07_BHSE3$depth)
+
+```
+
+##diff time??
+need to:
+2) find actual start times of exp (ugh) and start them there ??
+
+Feb
+all -2/13/2023  8:37:00 AM
+
+may
+all - 5/1/2023 12:00:oo pm 
+(these start at noon so they are ok ?)
+
+July 
+all - 7/26/2023  9:20:00 AM
+
+```{r}
+tide02_BHSE1$exp_time<- exp_time(tide02_BHSE1$datetime)
+tide02_BHSE2$exp_time<- exp_time(tide02_BHSE2$datetime)
+tide02_BHSE3$exp_time<- exp_time(tide02_BHSE3$datetime)
+
+tide05_BHSE1$exp_time<- exp_time(tide05_BHSE1$datetime)
+tide05_BHSE2$exp_time<- exp_time(tide05_BHSE2$datetime)
+tide05_BHSE3$exp_time<- exp_time(tide05_BHSE3$datetime)
+
+tide07_BHSE1$exp_time<- exp_time(tide07_BHSE1$datetime)
+tide07_BHSE2$exp_time<- exp_time(tide07_BHSE2$datetime)
+tide07_BHSE3$exp_time<- exp_time(tide07_BHSE3$datetime)
+
+```
+
+
+##rolling means 
+```{r}
+#getting rolling means for 
+#feb
+tide02_meanline_BHSE1<- GimmeMeanLine(tide02_BHSE1$depth)
+tide02_meanline_BHSE2<- GimmeMeanLine(tide02_BHSE2$depth)
+tide02_meanline_BHSE3<- GimmeMeanLine(tide02_BHSE3$depth)
+
+#may
+tide05_meanline_BHSE1<- GimmeMeanLine(tide05_BHSE1$depth)
+tide05_meanline_BHSE2<- GimmeMeanLine(tide05_BHSE2$depth)
+tide05_meanline_BHSE3<- GimmeMeanLine(tide05_BHSE3$depth)
+
+#July
+tide07_meanline_BHSE1<- GimmeMeanLine(tide07_BHSE1$depth)
+tide07_meanline_BHSE2<- GimmeMeanLine(tide07_BHSE2$depth)
+tide07_meanline_BHSE3<- GimmeMeanLine(tide07_BHSE3$depth)
+ 
+```
+
+##Ploting tings
+```{r}
+cleanDateX <-   
+  #making the x nice
+  scale_x_datetime(
+    #null for no legend title 
+    breaks = date_breaks("24 hours"),
+    labels = date_format(format = " %d"))
+```
+
+
+#all tide plot 
+```{r}
+
+
+July.m.tide <-ggplot() +
+#average mean line
+  geom_line(aes(tide07_BHSE1$datetime,tide07_meanline_BHSE1), color="#8FBC8F",linewidth=0.5)+
+   #bhse3
+   geom_line(aes(tide07_BHSE3$datetime,tide07_meanline_BHSE3), color="#CDCD00",linewidth=0.5)+
+   #bhse2
+   geom_line(aes(tide07_BHSE2$datetime,tide07_meanline_BHSE2), color="#CD9B9B",linewidth=0.5)+
+  
+ # cleanDateX +
+   #scaling the Y axis to all reflect same range
+  scale_y_continuous(limits=c(-0.025,0.43))+ 
+  
+  labs(
+    x=NULL,
+    y=NULL,
+    title=NULL) +
+    
+  theme_bw() +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  
+      scale_x_datetime(
+    #null for no legend title
+    name = NULL, 
+    breaks = date_breaks("1 days"),
+    labels = date_format(format = "%b %d")) 
+
+#for your viewing pleasure
+July.m.tide 
+  
+```
+
+#may tide
+```{r}
+May.m.tide <-ggplot() +
+#average mean line
+   #bhse2
+   geom_line(aes(tide05_BHSE2$datetime,tide05_meanline_BHSE2), color="#CD9B9B", linewidth=0.5)+
+     #bhse3
+   geom_line(aes(tide05_BHSE3$datetime,tide05_meanline_BHSE3), color="#CDCD00", linewidth=0.5)+
+  
+  geom_line(aes(tide05_BHSE1$datetime,tide05_meanline_BHSE1), color="#8FBC8F", linewidth=0.5)+
+
+  #cleanDateX +
+   #scaling the Y axis to all reflect same range
+  scale_y_continuous(limits=c(-0.025,0.43))+ 
+  
+  labs(
+    x=NULL,
+    y=NULL,
+    title= NULL) + 
+    
+  theme_bw() +
+  
+    scale_x_datetime(
+    #null for no legend title
+    name = NULL, 
+    breaks = date_breaks("1 days"),
+    labels = date_format(format = "%b %d"))+ 
+  
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
+
+#for your viewing pleasure
+May.m.tide 
+```
+
+#feb tide
+```{r}
+Feb.m.tide <- ggplot() +
+#average mean line
+
+   #bhse2
+   geom_line(aes(tide02_BHSE2$datetime,tide02_meanline_BHSE2), color="#CD9B9B", linewidth=0.5)+ 
+     #bhse3
+   geom_line(aes(tide02_BHSE3$datetime,tide02_meanline_BHSE3), color="#CDCD00", linewidth=0.5)+
+  
+  geom_line(aes(tide02_BHSE1$datetime,tide02_meanline_BHSE1), color="#8FBC8F", linewidth=0.5)+
+  
+  #cleanDateX +
+   #scaling the Y axis to all reflect same range
+  scale_y_continuous(limits=c(-0.025,0.43))+ 
+  
+  labs(
+    x=NULL,
+    y=NULL,
+    title=NULL) +
+  
+    scale_x_datetime(
+    #null for no legend title
+    name = NULL, 
+    breaks = date_breaks("1 days"),
+    labels = date_format(format = "%b %d"))+ 
+  
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))+
+    
+  theme_bw()
+
+
+#for your viewing pleasure
+Feb.m.tide 
+```
+##all together now!
+```{r}
+
+
+#plotting all of them 
+plot_grid(Feb.m.tide,May.m.tide,July.m.tide,
+          #making tide height the same
+          align = "v",
+          label_size = 8,
+          #in three rows
+          nrow=3)
+
+#ggsave("allTideJan07.pdf", width = 5, height = 3)
+
+
+```
+
+
+

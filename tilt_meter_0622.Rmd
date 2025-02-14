@@ -1,0 +1,78 @@
+---
+title: 'Plotting tilt meter data  '
+output:
+  html_document:
+    df_print: paged
+---
+
+load packages:
+
+```{r}
+# load packages
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+#working with time 
+library(lubridate)
+
+```
+
+
+## Loading the data
+
+you have to manually go in and delete the words "logged" from un-useful columns
+
+and re name columns (hard to do in R)
+
+
+
+```{r}
+#tilt meter data 
+tilt_meter22 <- readxl::read_xlsx("data/LAC22_tilt.xlsx") |> 
+  #trying to clean the time column 
+  mutate(datetime = ymd_hms(time)) |>
+  mutate(day = day(datetime), hour= hour(datetime), min=minute(datetime)) |>
+  rename('speed' = 'Speed (cm/s)' , 'heading' = 'Heading (degrees)') |>
+  #combing day and hourand minute!
+  mutate(dayminhour = paste(day, hour, min, sep="_")) |>
+  mutate('direction' = case_when(heading >= 150 ~ 'S',
+                           heading < 150 ~ 'N'))
+
+```
+
+
+
+22 tilt meter
+```{r}
+
+  
+tilt_meter22exprun <- tilt_meter22|>
+  #filtering data for only the experiment 
+  filter(datetime >= as_datetime("2022-06-15 14:09:37")) |>
+  filter(datetime <= as_datetime("2022-06-16 12:00:37")) 
+  
+avgCurrent <- mean(tilt_meter22exprun$speed) 
+
+  
+tilt_meter22exprun |>
+   ggplot() +
+  
+    geom_point(aes(
+        x=datetime,
+        y=speed,
+        #color is the N or S direction 
+        color = direction)) +
+  
+  geom_hline(aes(yintercept=avgCurrent)) +
+
+  
+  labs(
+    x="Date and time",
+    y="speed (cm/s)",
+    title="Flow speed of tide through chanel number 2 (2022)"
+  ) + 
+  
+  theme_bw()
+
+```
+

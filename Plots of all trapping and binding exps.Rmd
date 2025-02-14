@@ -1,0 +1,494 @@
+---
+title: 'wokring with microbial mat data '
+output:
+  html_document:
+    df_print: paged
+---
+
+load packages:
+
+```{r}
+# load packages
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+#working with time 
+library(lubridate)
+library(cowplot)
+
+
+```
+
+# may long term experiments!
+
+## Loading the data
+
+The master sheet is all of my ooid data from any mat experiment tested, the sheet is different for each exp but has the same headers/information
+
+ooid is always ooid %
+
+```{r}
+#loading the combined xcel sheet 
+may_23_dat <- readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "field_may_23")
+
+feb_23_dat <- readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "field_feb_23")
+
+july_23_dat <-  readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "field_july_23")
+
+background_ooid <- readxl::read_excel("data/ooid_data_master.xlsx", sheet = "background")
+```
+# plot for background ooids in highway 
+lets try lat or long vs. ooid count 
+```{r}
+background_ooid$LatLong <- 
+ paste(background_ooid$latlong, background_ooid$long, sep = ",")
+```
+
+```{r}
+
+#avg is 8.82
+background_ooid |>
+
+#get ready to plot babes
+ ggplot()+
+  #gen aes
+  aes(x=`long`, 
+      #lets try longitue
+      y =`ooid %`, 
+      color = `location_num`
+   ) +
+#adding them as points
+  geom_point(size = 3.5, show.legend = FALSE)+
+  
+  #adding a y intercept at the average 
+  geom_hline(yintercept = 8.82, color='lightsalmon3') + 
+  #adding text 
+ annotate("text", x=-71.70265, 
+          y=11, label="avg = 8.82%", 
+          color="lightsalmon3") +
+    
+  
+#labels
+  labs(
+    x="",
+  # this is left blank for the cowplot 
+    y="ooid %",
+    title ='Natural ooid coverage on mats' ) +
+  #trying to edit the legend
+#plot clean  
+ theme( 
+   legend.position = "right"
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+
+```
+
+
+
+
+
+
+## Averaging the 3 data points for each experiment site
+
+```{r}
+#getting data into the average values
+avg_may_dat <-may_23_dat|>
+  
+#one I figure out how I actually plotted this data in the master sheet i will fix it
+  # mutate(
+  #   collection_date = as_date(date_time)
+  # ) |>
+
+#grouping by the sample and the time
+  group_by(sample, `hours after`)|>
+#calculating the mean and the standard deviation from out 3 replicas at each site
+  summarise(
+    avg=mean(ooid), 
+    sd = sd(ooid), 
+    #keeping mat type to recall it later 
+    mat_type = mat_type
+  ) |>
+#ungrouping
+  ungroup()
+
+
+```
+
+```{r}
+#getting data into the average values
+avg_feb_dat <-feb_23_dat|>
+  
+#one I figure out how I actually plotted this data in the master sheet i will fix it
+  # mutate(
+  #   collection_date = as_date(date_time)
+  # ) |>
+
+#grouping by the sample and the time
+  group_by(sample, `hours after`)|>
+#calculating the mean and the standard deviation from out 3 replicas at each site
+  summarise(
+    avg=mean(ooid), 
+    sd = sd(ooid), 
+    #keeping mat type to recall it later 
+    mat_type = mat_type
+  ) |>
+#ungrouping
+  ungroup()
+```
+
+```{r}
+#getting data into the average values
+avg_july_dat <-july_23_dat|>
+  
+#one I figure out how I actually plotted this data in the master sheet i will fix it
+  # mutate(
+  #   collection_date = as_date(date_time)
+  # ) |>
+
+#grouping by the sample and the time
+  group_by(sample, `hours after`)|>
+#calculating the mean and the standard deviation from out 3 replicas at each site
+  summarise(
+    avg=mean(ooid), 
+    sd = sd(ooid), 
+    #keeping mat type to recall it later 
+    mat_type = mat_type
+  ) |>
+#ungrouping
+  ungroup()
+```
+
+## The actual plot itself
+
+looks like the weird increase is almost within the standard deviation of the middle low day so it could be true that it just levels off. when looking through photos the white (ooids) seems to spead out so maybe ooid 'chunks' are spreading from a pile up to a more flat surface
+
+we can test this by maybe putting a little pile out and measuring its spread over the week in the july trip?
+
+exp- take photos from same height and with a scale and then draw circle around edge to see how it changes over the week
+
+```{r}
+
+
+#using new data set
+ooid_plot_23_may<-avg_may_dat |>
+  ggplot()+
+  
+#time is on the y axis, vs the avg ooid loss, shape is by sample
+  aes(x=`hours after`, 
+      y =avg, 
+      color = mat_type) +
+scale_color_manual(values=c('pink','darkgreen')) + 
+                     
+#adding error bars to our samples
+  geom_errorbar(aes(
+    ymin=(avg-sd),
+    ymax=(avg+sd)),
+    color= "darkgrey",
+    width = 0.35
+  )+
+#trying to add an average line 
+  
+# geom_smooth(aes(color = mat_type),
+#   stat = "smooth", 
+#   se=FALSE, 
+#   weight = 0.5, 
+#   #getting that line out of the legend 
+#   show.legend = FALSE) +
+
+#now adding to points so they plot on top 
+  geom_point(aes(shape=sample),
+             size = 3.5, show.legend = FALSE
+              )+
+    
+  #labels
+  labs(
+    x=" ",
+    # this is left blank for the cowplot 
+    y=" ",
+    title ='May',
+  
+    shape = "experiment loction", 
+    color ="type of microbial mat"
+  ) +
+  #trying to edit the legend
+ theme( 
+   legend.position = "right"
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+ooid_plot_23_may
+
+
+```
+
+```{r}
+
+
+#using new data set
+ooid_plot_23_feb<-avg_feb_dat |>
+#  filter(`hours after` <= 125)|>
+  
+  ggplot()+
+#time is on the y axis, vs the avg ooid loss, shape is by sample
+  aes(x=`hours after`, 
+      y =avg, 
+      color = mat_type) +
+scale_color_manual(values=c('pink','darkgreen')) + 
+                     
+#adding error bars to our samples
+  geom_errorbar(aes(
+    ymin=(avg-sd),
+    ymax=(avg+sd)),
+    color= "darkgrey",
+    width = 0.35
+  )+
+
+#now adding to points so they plot on top 
+  geom_point(aes(shape=sample),
+             size = 3.5, show.legend = FALSE
+              )+
+    
+  #labels
+  labs(
+    x=" ",
+    y=" ", 
+    shape = "experiment loction", 
+    color ="type of microbial mat",
+      title ='Febuary'
+  ) +
+  #trying to edit the legend
+ theme( 
+   legend.position = 'none'
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+ooid_plot_23_feb
+
+```
+
+```{r}
+#using new data set
+ooid_plot_23_july<-avg_july_dat |>
+  ggplot()+
+  
+#time is on the y axis, vs the avg ooid loss, shape is by sample
+  aes(x=`hours after`, 
+      y =avg, 
+      color = mat_type) +
+scale_color_manual(values=c('pink','tan','darkgreen')) + 
+                     
+#adding error bars to our samples
+  geom_errorbar(aes(
+    ymin=(avg-sd),
+    ymax=(avg+sd)),
+    color= "darkgrey",
+    width = 0.35
+  )+
+
+#now adding to points so they plot on top 
+  geom_point(aes(shape=sample),
+             size = 3.5, show.legend = FALSE
+              )+
+    
+  #labels
+  labs(
+    x=" ",
+    y=" ", 
+    shape = "experiment loction", 
+    color ="type of microbial mat", 
+    title ='July'
+  ) +
+  #trying to edit the legend
+ theme( 
+   legend.position = 'none'
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+ooid_plot_23_july
+
+
+```
+
+## combing the two plots
+
+```{r}
+
+OP_23F<-ooid_plot_23_feb +
+  labs(y="ooid coverage (%)")
+
+OP_23M<-ooid_plot_23_may +
+  labs(x="Hours after deployment")
+
+    
+# # 1. Open a pdf file
+pdf("23_mat_TB_all.pdf",
+    #width of pdf
+    width = 7.0,
+    #height of pdf
+    height = 3.0)
+  
+# 2. plot 
+plot_grid(OP_23F, OP_23M, ooid_plot_23_july,
+          nrow=1) 
+
+# Close the pdf file
+dev.off() 
+
+
+```
+
+# Looking at control data
+
+## load data
+
+this data set is similar to the 22 experiments where the times are pre (-1), sand(0) and post (24), unsure if the pre is even needed other than background information on how much sediment is actually in the mats. The other data set (22 experiments) is pre(na), sand(0), post(24) unsure which one is better atm
+
+```{r}
+#loading the combined xcel sheet 
+control_exp_may <- 
+readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "BHSE_C_may23")
+
+```
+
+## finding averages for beach sand and sieved sand
+
+unsure if the averages are actually good bc it got weird, some are a lot different and may need to be treated as separate experiments
+
+```{r}
+
+#this is the same basic R code as above 
+#getting data into the average values
+avg_may_control_dat <-control_exp_may|>
+  
+#one I figure out how I actually plotted this data in the master sheet i will fix it
+  # mutate(
+  #   collection_date = as_date(date_time)
+  # ) |>
+
+#grouping by the sample and the time
+  group_by(sample, `hours after`)|>
+#calculating the mean and the standard deviation from out 3 replicas at each site
+  summarise(
+    avg=mean(ooid), 
+    sd = sd(ooid), 
+    #keeping mat type to recall it later 
+    mat_type = mat_type
+  ) |>
+#ungrouping
+  ungroup()
+```
+
+## plotting
+
+```{r}
+
+#using new data set
+ooid_control_plot_23<-avg_may_control_dat |>
+  ggplot()+
+  
+#time is on the y axis, vs the avg ooid loss, shape is by sample
+  aes(x=`hours after`, 
+      y =avg, 
+      color = mat_type) +
+scale_color_manual(values='darkgreen') + 
+                     
+#adding error bars to our samples
+  geom_errorbar(aes(
+    ymin=(avg-sd),
+    ymax=(avg+sd)),
+    color= "darkgrey",
+    width = 0.35
+  )+
+#trying to add an average line
+  #this line is weird bc it uses all of the data when we just want 0-24
+# geom_smooth(aes(color = mat_type),
+#   stat = "smooth", 
+#   se=FALSE, 
+#   weight = 0.5, 
+#   #getting that line out of the legend 
+#   show.legend = FALSE) +
+
+#now adding to points so they plot on top 
+  geom_point(aes(shape=sample),
+             size = 3.5, show.legend = TRUE
+              )+
+    
+  #labels
+  labs(
+    x="hours since experiment deployment",
+    y="% mat covered in ooids", 
+    shape = "experiment loction", 
+    color ="type of microbial mat"
+  ) +
+  #trying to edit the legend
+ theme( 
+   legend.position = "right"
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+ooid_control_plot_23
+```
+
+```{r}
+#using new data set
+ooid_control_plot2_23<-control_exp_may|>
+  ggplot()+
+  
+#time is on the y axis, vs the avg ooid loss, shape is by sample
+  aes(x=`hours after`, 
+      y = `ooid`, 
+      color = `sample`) +
+scale_color_manual(values=c('darkgreen','red')) + 
+                     
+#trying to add an average line
+  #this line is weird bc it uses all of the data when we just want 0-24
+# geom_smooth(aes(color = mat_type),
+#   stat = "smooth", 
+#   se=FALSE, 
+#   weight = 0.5, 
+#   #getting that line out of the legend 
+#   show.legend = FALSE) +
+
+#now adding to points so they plot on top 
+  geom_point(aes(shape=`ID`),
+             size = 3.5, show.legend = TRUE
+              )+
+    
+  #labels
+  labs(
+    x="hours since experiment deployment",
+    y="% mat covered in ooids", 
+    shape = "experiment loction", 
+    color ="type of microbial mat"
+  ) +
+  #trying to edit the legend
+ theme( 
+   legend.position = "right"
+)+
+  expand_limits(y=c(0, 80))+
+  theme_bw()
+
+ooid_control_plot2_23
+```
+
+## some question and exp ideas I have
+
+*is filament growth light dependent??*
+
+could test this using electrical tape/ or a cut lid (might be better) on one side of the each of the control experiments, do two again (one with beach sand and one with sieved sand
+
+*is all parts of the island have the same amount of sediment on top?*
+
+use the cut out for the long term experiments and take a 'cross section' of standard sediment from beach into interior (minimum ten locations) to see if there is an increase as you are closer to the edge etc.
+
+same- one mechanism is delivering all the sediment and it may just be storms
+
+different- I would say tides push it in if there is more closer to the beach
+
+look at size of sediment -- determine if wind or water is moving it based on size

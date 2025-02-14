@@ -1,0 +1,184 @@
+---
+title: "filament_2"
+author: "Brianna Hibner"
+date: "2023-10-02"
+output: html_document
+---
+
+load packages:
+
+```{r}
+# load packages
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+#working with time 
+library(lubridate)
+library(cowplot)
+
+```
+
+```{r}
+#loading the xcel sheet
+filament_dat <- readxl::read_xlsx("filament_TB_exp.xlsx")
+
+filament_dat$filament_coverage= factor(filament_dat$filament_coverage,
+                                       levels = c('none', 'low', 'medium','high'))
+
+#getting data into the average values
+count_filament_dat <-filament_dat|>
+  
+#grouping by the condition, extraction location and tube ID
+  group_by(`date`,`Experimental mat location`)|>
+   count(name ='total count') 
+
+#finding counts per coverage 
+count_cond_dat <-filament_dat |>
+   group_by(`Experimental mat location`,`date`, `filament_coverage`)|>
+  count()
+
+new_dat <- merge(count_cond_dat,count_filament_dat, by = c("Experimental mat location", "date"))
+
+#making data with % in each category 
+new_dat<-new_dat|>
+  mutate(percent = n/`total count`)
+
+```
+
+
+## plot for filament data 
+
+```{r}
+
+# unsue if I need this 
+BHSE1_per_plot<-new_dat |> 
+  filter(`Experimental mat location`=="BHSE1") |>
+  ggplot() + 
+  
+  aes(x=date,
+      y=percent,
+      fill=filament_coverage, 
+      )+ 
+  
+  geom_bar(stat="identity", color="black") + 
+  
+  #need to do that manual thing
+  scale_fill_manual(values=c('aliceblue','darkseagreen2','yellowgreen','forestgreen'))+
+ labs(
+    x="date",
+    y="filament coverage",
+    title="BHSE1 mat sample"
+  ) + 
+
+ # guides(fill = "none")+
+  
+  theme_bw()
+
+
+BHSE1_per_plot
+```
+```{r}
+
+# unsue if I need this 
+BHSE2_per_plot<-new_dat |> 
+  filter(`Experimental mat location`=="BHSE2") |>
+  ggplot() + 
+  
+  aes(x=date,
+      y=percent,
+      fill=filament_coverage, 
+      )+ 
+  
+  geom_bar(stat="identity", color="black") + 
+  
+  #none of these have low so I took it out altogether 
+  scale_fill_manual(values=c('darkseagreen2','yellowgreen','forestgreen'))+
+ labs(
+    x="date",
+    y="filament coverage",
+    title="BHSE2 mat sample"
+  ) + 
+
+ # guides(fill = "none")+
+  
+  theme_bw()
+
+
+BHSE2_per_plot
+```
+```{r}
+# unsue if I need this 
+BHSE3B_per_plot<-new_dat |> 
+  filter(`Experimental mat location`=="BHSE_3B") |>
+  ggplot() + 
+  
+  aes(x=date,
+      y=percent,
+      fill=filament_coverage, 
+      )+ 
+  
+  geom_bar(stat="identity", color="black") + 
+  
+  scale_fill_manual(values=c('aliceblue','darkseagreen2','yellowgreen','forestgreen'))+
+ labs(
+    x="date",
+    y="filament coverage",
+    title="BHSE_3B mat sample"
+  ) + 
+
+ # guides(fill = "none")+
+  
+  theme_bw()
+
+
+BHSE3B_per_plot
+```
+
+```{r}
+#making data with % in each category 
+new_dat<-new_dat|>
+  mutate(percent = n/`total count`)
+
+# unsue if I need this 
+BHSE3G_per_plot<-new_dat |> 
+  filter(`Experimental mat location`=="BHSE_3G") |>
+  ggplot() + 
+  
+  aes(x=date,
+      y=percent,
+      fill=filament_coverage, 
+      )+ 
+  
+  geom_bar(stat="identity", color="black") + 
+  
+  scale_fill_manual(values=c('aliceblue','darkseagreen2','yellowgreen','forestgreen'))+
+ labs(
+    x="date",
+    y="filament coverage",
+    title="BHSE_3G mat sample"
+  ) + 
+
+ # guides(fill = "none")+
+  
+  theme_bw()
+
+
+BHSE3G_per_plot
+```
+
+```{r}
+# Open a pdf file
+#pdf("TB-filament-movement_plot.pdf") 
+# 2. Create a plot
+
+
+
+#putting it all together 
+plot_grid(BHSE1_per_plot, BHSE2_per_plot, BHSE3B_per_plot, BHSE3G_per_plot,
+          ncol = 2) 
+
+# Close the pdf file
+#dev.off()
+
+```
+
