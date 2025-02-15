@@ -1,5 +1,5 @@
 ---
-title: "filament_2"
+title: "filament movement plot code"
 author: "Brianna Hibner"
 date: "2023-10-02"
 output: html_document
@@ -27,11 +27,9 @@ filament_dat$filament_coverage= factor(filament_dat$filament_coverage,
 
 #getting data into the average values
 count_filament_dat <-filament_dat|>
-  
 #grouping by the condition, extraction location and tube ID
   group_by(`date`,`Experimental mat location`)|>
    count(name ='total count') 
-
 #finding counts per coverage 
 count_cond_dat <-filament_dat |>
    group_by(`Experimental mat location`,`date`, `filament_coverage`)|>
@@ -139,7 +137,7 @@ BHSE3B_per_plot
 new_dat<-new_dat|>
   mutate(percent = n/`total count`)
 
-# unsue if I need this 
+#plot
 BHSE3G_per_plot<-new_dat |> 
   filter(`Experimental mat location`=="BHSE_3G") |>
   ggplot() + 

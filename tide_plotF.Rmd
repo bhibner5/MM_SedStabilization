@@ -164,9 +164,8 @@ tide07_BHSE3$depth<- noNegdepth(tide07_BHSE3$depth)
 
 ```
 
-##diff time??
-need to:
-2) find actual start times of exp (ugh) and start them there ??
+
+start times for experiments:
 
 Feb
 all -2/13/2023  8:37:00 AM
@@ -227,7 +226,6 @@ cleanDateX <-
 
 #all tide plot 
 ```{r}
-
 
 July.m.tide <-ggplot() +
 #average mean line
