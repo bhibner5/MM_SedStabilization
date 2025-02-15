@@ -1,5 +1,5 @@
 ---
-title: 'wokring with microbial mat data '
+title: 'Sediment Stabilization experiments (2022 and 2023) on microbial mats'
 output:
   html_document:
     df_print: paged
@@ -23,9 +23,9 @@ library(cowplot)
 
 ## Loading the data
 
-The master sheet is all of my ooid data from any mat experiment tested, the sheet is different for each exp but has the same headers/information
+The master excel sheet is all of my ooid data from any mat experiment tested, the sheet is different for each exp but has the same headers/information
 
-ooid is always ooid %
+ooid is always in ooid %
 
 ```{r}
 #loading the combined xcel sheet 
@@ -49,9 +49,9 @@ background_ooid$LatLong <-
 #avg is 8.82
 background_ooid |>
 
-#get ready to plot babes
+#get ready to plot 
  ggplot()+
-  #gen aes
+  #generate aes
   aes(x=`long`, 
       #lets try longitue
       y =`ooid %`, 
@@ -86,21 +86,11 @@ background_ooid |>
 ```
 
 
-
-
-
-
 ## Averaging the 3 data points for each experiment site
 
 ```{r}
 #getting data into the average values
 avg_may_dat <-may_23_dat|>
-  
-#one I figure out how I actually plotted this data in the master sheet i will fix it
-  # mutate(
-  #   collection_date = as_date(date_time)
-  # ) |>
-
 #grouping by the sample and the time
   group_by(sample, `hours after`)|>
 #calculating the mean and the standard deviation from out 3 replicas at each site
@@ -113,18 +103,12 @@ avg_may_dat <-may_23_dat|>
 #ungrouping
   ungroup()
 
-
 ```
 
 ```{r}
 #getting data into the average values
 avg_feb_dat <-feb_23_dat|>
   
-#one I figure out how I actually plotted this data in the master sheet i will fix it
-  # mutate(
-  #   collection_date = as_date(date_time)
-  # ) |>
-
 #grouping by the sample and the time
   group_by(sample, `hours after`)|>
 #calculating the mean and the standard deviation from out 3 replicas at each site
@@ -141,11 +125,6 @@ avg_feb_dat <-feb_23_dat|>
 ```{r}
 #getting data into the average values
 avg_july_dat <-july_23_dat|>
-  
-#one I figure out how I actually plotted this data in the master sheet i will fix it
-  # mutate(
-  #   collection_date = as_date(date_time)
-  # ) |>
 
 #grouping by the sample and the time
   group_by(sample, `hours after`)|>
@@ -161,12 +140,6 @@ avg_july_dat <-july_23_dat|>
 ```
 
 ## The actual plot itself
-
-looks like the weird increase is almost within the standard deviation of the middle low day so it could be true that it just levels off. when looking through photos the white (ooids) seems to spead out so maybe ooid 'chunks' are spreading from a pile up to a more flat surface
-
-we can test this by maybe putting a little pile out and measuring its spread over the week in the july trip?
-
-exp- take photos from same height and with a scale and then draw circle around edge to see how it changes over the week
 
 ```{r}
 
@@ -208,7 +181,6 @@ scale_color_manual(values=c('pink','darkgreen')) +
     # this is left blank for the cowplot 
     y=" ",
     title ='May',
-  
     shape = "experiment loction", 
     color ="type of microbial mat"
   ) +
@@ -221,16 +193,12 @@ scale_color_manual(values=c('pink','darkgreen')) +
 
 ooid_plot_23_may
 
-
 ```
 
 ```{r}
-
-
 #using new data set
 ooid_plot_23_feb<-avg_feb_dat |>
 #  filter(`hours after` <= 125)|>
-  
   ggplot()+
 #time is on the y axis, vs the avg ooid loss, shape is by sample
   aes(x=`hours after`, 
@@ -247,9 +215,7 @@ scale_color_manual(values=c('pink','darkgreen')) +
   )+
 
 #now adding to points so they plot on top 
-  geom_point(aes(shape=sample),
-             size = 3.5, show.legend = FALSE
-              )+
+  geom_point(aes(shape=sample), size = 3.5, show.legend = FALSE)+
     
   #labels
   labs(
@@ -265,9 +231,7 @@ scale_color_manual(values=c('pink','darkgreen')) +
 )+
   expand_limits(y=c(0, 80))+
   theme_bw()
-
 ooid_plot_23_feb
-
 ```
 
 ```{r}
@@ -477,18 +441,3 @@ scale_color_manual(values=c('darkgreen','red')) +
 ooid_control_plot2_23
 ```
 
-## some question and exp ideas I have
-
-*is filament growth light dependent??*
-
-could test this using electrical tape/ or a cut lid (might be better) on one side of the each of the control experiments, do two again (one with beach sand and one with sieved sand
-
-*is all parts of the island have the same amount of sediment on top?*
-
-use the cut out for the long term experiments and take a 'cross section' of standard sediment from beach into interior (minimum ten locations) to see if there is an increase as you are closer to the edge etc.
-
-same- one mechanism is delivering all the sediment and it may just be storms
-
-different- I would say tides push it in if there is more closer to the beach
-
-look at size of sediment -- determine if wind or water is moving it based on size
