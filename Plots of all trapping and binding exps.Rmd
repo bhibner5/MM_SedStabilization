@@ -6,7 +6,6 @@ output:
 ---
 
 load packages:
-
 ```{r}
 # load packages
 library(ggplot2)
@@ -15,11 +14,8 @@ library(dplyr)
 #working with time 
 library(lubridate)
 library(cowplot)
-
-
 ```
 
-# may long term experiments!
 
 ## Loading the data
 
@@ -37,57 +33,48 @@ july_23_dat <-  readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "field_j
 
 background_ooid <- readxl::read_excel("data/ooid_data_master.xlsx", sheet = "background")
 ```
-# plot for background ooids in highway 
-lets try lat or long vs. ooid count 
+
+
+#plot for ooids on mats through the mangrove highway 
 ```{r}
 background_ooid$LatLong <- 
  paste(background_ooid$latlong, background_ooid$long, sep = ",")
 ```
 
+#the actual Plot
 ```{r}
-
 #avg is 8.82
 background_ooid |>
-
 #get ready to plot 
  ggplot()+
   #generate aes
-  aes(x=`long`, 
-      #lets try longitue
-      y =`ooid %`, 
-      color = `location_num`
-   ) +
+  aes(x=`long`, y =`ooid %`, color = `location_num` ) +
 #adding them as points
   geom_point(size = 3.5, show.legend = FALSE)+
-  
   #adding a y intercept at the average 
   geom_hline(yintercept = 8.82, color='lightsalmon3') + 
   #adding text 
  annotate("text", x=-71.70265, 
           y=11, label="avg = 8.82%", 
           color="lightsalmon3") +
-    
-  
 #labels
   labs(
-    x="",
-  # this is left blank for the cowplot 
-    y="ooid %",
+   # this is left blank for the cowplot 
+    x="", 
+    y="ooid %", 
     title ='Natural ooid coverage on mats' ) +
-  #trying to edit the legend
+
 #plot clean  
  theme( 
    legend.position = "right"
 )+
   expand_limits(y=c(0, 80))+
   theme_bw()
-
-
 ```
 
+Multi-day in situ field incubation experiment results (Feb, May, July 2023)
 
 ## Averaging the 3 data points for each experiment site
-
 ```{r}
 #getting data into the average values
 avg_may_dat <-may_23_dat|>
@@ -108,7 +95,6 @@ avg_may_dat <-may_23_dat|>
 ```{r}
 #getting data into the average values
 avg_feb_dat <-feb_23_dat|>
-  
 #grouping by the sample and the time
   group_by(sample, `hours after`)|>
 #calculating the mean and the standard deviation from out 3 replicas at each site
@@ -125,7 +111,6 @@ avg_feb_dat <-feb_23_dat|>
 ```{r}
 #getting data into the average values
 avg_july_dat <-july_23_dat|>
-
 #grouping by the sample and the time
   group_by(sample, `hours after`)|>
 #calculating the mean and the standard deviation from out 3 replicas at each site
@@ -140,14 +125,10 @@ avg_july_dat <-july_23_dat|>
 ```
 
 ## The actual plot itself
-
 ```{r}
-
-
 #using new data set
 ooid_plot_23_may<-avg_may_dat |>
   ggplot()+
-  
 #time is on the y axis, vs the avg ooid loss, shape is by sample
   aes(x=`hours after`, 
       y =avg, 
@@ -159,21 +140,11 @@ scale_color_manual(values=c('pink','darkgreen')) +
     ymin=(avg-sd),
     ymax=(avg+sd)),
     color= "darkgrey",
-    width = 0.35
-  )+
-#trying to add an average line 
-  
-# geom_smooth(aes(color = mat_type),
-#   stat = "smooth", 
-#   se=FALSE, 
-#   weight = 0.5, 
-#   #getting that line out of the legend 
-#   show.legend = FALSE) +
+    width = 0.35 )+
 
 #now adding to points so they plot on top 
   geom_point(aes(shape=sample),
-             size = 3.5, show.legend = FALSE
-              )+
+             size = 3.5, show.legend = FALSE)+
     
   #labels
   labs(
@@ -192,7 +163,6 @@ scale_color_manual(values=c('pink','darkgreen')) +
   theme_bw()
 
 ooid_plot_23_may
-
 ```
 
 ```{r}
@@ -274,11 +244,9 @@ scale_color_manual(values=c('pink','tan','darkgreen')) +
   theme_bw()
 
 ooid_plot_23_july
-
-
 ```
 
-## combing the two plots
+## combing all three of the plots
 
 ```{r}
 
@@ -302,142 +270,44 @@ plot_grid(OP_23F, OP_23M, ooid_plot_23_july,
 
 # Close the pdf file
 dev.off() 
-
-
 ```
 
-# Looking at control data
+`
+3.2.1 24-hr field incubation experiment results (June 2022)
 
-## load data
-
-this data set is similar to the 22 experiments where the times are pre (-1), sand(0) and post (24), unsure if the pre is even needed other than background information on how much sediment is actually in the mats. The other data set (22 experiments) is pre(na), sand(0), post(24) unsure which one is better atm
 
 ```{r}
 #loading the combined xcel sheet 
-control_exp_may <- 
-readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "BHSE_C_may23")
+june_22_dat <- readxl::read_xlsx("data/ooid_data_master.xlsx", sheet = "field_june_22")
 
 ```
 
-## finding averages for beach sand and sieved sand
 
-unsure if the averages are actually good bc it got weird, some are a lot different and may need to be treated as separate experiments
 
 ```{r}
 
-#this is the same basic R code as above 
-#getting data into the average values
-avg_may_control_dat <-control_exp_may|>
+#filter for our two time points (0 and 24)
+H24_june_dat<-june_22_dat |>
+  filter(time == c(0,24))
+
+#the plot!!
+ooid_plot_22 <- H24_june_dat|>
+  ggplot() +
+  aes(x=time, y =ooid, color=mat_type) +
+   #adding colors for each mat_type
+  scale_color_manual(values=c('lightgreen',"pink",'darkgreen')) + 
+  geom_point(size=3.5, show.legend = FALSE)+
   
-#one I figure out how I actually plotted this data in the master sheet i will fix it
-  # mutate(
-  #   collection_date = as_date(date_time)
-  # ) |>
-
-#grouping by the sample and the time
-  group_by(sample, `hours after`)|>
-#calculating the mean and the standard deviation from out 3 replicas at each site
-  summarise(
-    avg=mean(ooid), 
-    sd = sd(ooid), 
-    #keeping mat type to recall it later 
-    mat_type = mat_type
-  ) |>
-#ungrouping
-  ungroup()
-```
-
-## plotting
-
-```{r}
-
-#using new data set
-ooid_control_plot_23<-avg_may_control_dat |>
-  ggplot()+
-  
-#time is on the y axis, vs the avg ooid loss, shape is by sample
-  aes(x=`hours after`, 
-      y =avg, 
-      color = mat_type) +
-scale_color_manual(values='darkgreen') + 
-                     
-#adding error bars to our samples
-  geom_errorbar(aes(
-    ymin=(avg-sd),
-    ymax=(avg+sd)),
-    color= "darkgrey",
-    width = 0.35
-  )+
-#trying to add an average line
-  #this line is weird bc it uses all of the data when we just want 0-24
-# geom_smooth(aes(color = mat_type),
-#   stat = "smooth", 
-#   se=FALSE, 
-#   weight = 0.5, 
-#   #getting that line out of the legend 
-#   show.legend = FALSE) +
-
-#now adding to points so they plot on top 
-  geom_point(aes(shape=sample),
-             size = 3.5, show.legend = TRUE
-              )+
-    
-  #labels
+ #labels
   labs(
-    x="hours since experiment deployment",
-    y="% mat covered in ooids", 
-    shape = "experiment loction", 
-    color ="type of microbial mat"
-  ) +
-  #trying to edit the legend
- theme( 
-   legend.position = "right"
-)+
+    x="time (hours)",
+    y="ooid coverage (%)")+ 
+  
+  facet_wrap(~energy, labeller = label_both) +
   expand_limits(y=c(0, 80))+
+  
   theme_bw()
 
-ooid_control_plot_23
+ooid_plot_22
+
 ```
-
-```{r}
-#using new data set
-ooid_control_plot2_23<-control_exp_may|>
-  ggplot()+
-  
-#time is on the y axis, vs the avg ooid loss, shape is by sample
-  aes(x=`hours after`, 
-      y = `ooid`, 
-      color = `sample`) +
-scale_color_manual(values=c('darkgreen','red')) + 
-                     
-#trying to add an average line
-  #this line is weird bc it uses all of the data when we just want 0-24
-# geom_smooth(aes(color = mat_type),
-#   stat = "smooth", 
-#   se=FALSE, 
-#   weight = 0.5, 
-#   #getting that line out of the legend 
-#   show.legend = FALSE) +
-
-#now adding to points so they plot on top 
-  geom_point(aes(shape=`ID`),
-             size = 3.5, show.legend = TRUE
-              )+
-    
-  #labels
-  labs(
-    x="hours since experiment deployment",
-    y="% mat covered in ooids", 
-    shape = "experiment loction", 
-    color ="type of microbial mat"
-  ) +
-  #trying to edit the legend
- theme( 
-   legend.position = "right"
-)+
-  expand_limits(y=c(0, 80))+
-  theme_bw()
-
-ooid_control_plot2_23
-```
-
