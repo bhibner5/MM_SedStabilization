@@ -1,0 +1,37 @@
+---
+title: "ANOVA test for ooid loss vs microbial mat type"
+output: html_notebook
+---
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(ez)
+library(readxl)
+library(ggplot2)
+```
+
+```{r}
+
+# Read the Excel file
+df_feb <- read_excel("ooid_data_master.xlsx", sheet = "field_feb_23")
+df_may <- read_excel("ooid_data_master.xlsx", sheet = "field_may_23")
+df_jul <- read_excel("ooid_data_master.xlsx", sheet = "field_july_23")
+```
+
+
+
+```{r}  
+# Two-way ANOVA with interaction between the mat type (sample), and the hours after sediment delivery
+anova_feb<-aov(`ooid` ~ `sample` * `hours after`, data = df_feb)
+anova_may<-aov(`ooid` ~ `sample` * `hours after`, data = df_may)
+anova_jul<-aov(`ooid` ~ `sample` * `hours after`, data = df_jul)
+
+#display summary of results 
+anova(anova_feb)
+anova(anova_may)
+anova(anova_jul)
+
+```
+
+

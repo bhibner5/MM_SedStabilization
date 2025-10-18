@@ -1,0 +1,54 @@
+---
+title: "ooid math for sedimentation potential of microbial mats on LAC"
+author: "Brianna Hibner"
+date: "2025-08-16"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+# load packages
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+#working with time 
+library(lubridate)
+library(scales)
+library(cowplot)
+
+#rollmean is in the package zoo 
+library(zoo)
+
+```
+
+```{r}
+#
+d50_ooidsize<-384
+rOoid_um <- d50_ooidsize/2
+
+#transform into cm
+rOoid <- rOoid_um*0.0001 #cm
+
+AreaOoid <- pi*(rOoid^2) #cm^2
+
+VOoid <- (4/3)*pi*((rOoid)^3)  #cm^3
+SGooid <- 2.8 #g/cm^3
+
+
+PT_carbonateVol <- (0.16 *VOoid)/AreaOoid
+#changes into g/ area time by using density
+PT_carbonateVol
+
+PT_carbonateVol*SGooid
+
+#again but for flat mats
+FM_carbonateVol <- (0.04 *VOoid)/AreaOoid
+FM_carbonateVol
+
+FM_carbonateVol*SGooid
+
+```
+
+
+
+
