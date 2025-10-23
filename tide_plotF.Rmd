@@ -28,30 +28,27 @@ and re name columns (hard to do in R)
 ```{r}
 
 #loading the combined xcel sheet 
-tide02_BHSE1 <- readxl::read_xlsx("data/211_LAC_0223.xlsx", 
+tide02_II <- readxl::read_xlsx("data/372_LAC_0223.xlsx", 
     #skipping first line 
-    skip=1, 
-    col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+    skip=1, col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
   #dropping Nas
   drop_na()  |>
     #7/26/2023  9:20:00 AM
    filter(datetime > ymd_hms("2023-02-13 08:20:00"))
 
 
-tide02_BHSE2 <- readxl::read_xlsx("data/372_LAC_0223.xlsx", 
-                               #skipping first line 
-                               skip=1,
-                               col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+tide02_MI <- readxl::read_xlsx("data/211_LAC_0223.xlsx", 
+    #skipping first line 
+    skip=1,col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
    #dropping Nas
   drop_na() |>
       #7/26/2023  9:20:00 AM
    filter(datetime > ymd_hms("2023-02-13 08:20:00"))
 
 
-tide02_BHSE3 <- readxl::read_xlsx("data/678_LAC_0223.xlsx", 
-                               #skipping first line 
-                               skip=1,
-                               col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
+tide02_PA <- readxl::read_xlsx("data/678_LAC_0223.xlsx", 
+   #skipping first line 
+  skip=1,col_types = c("text", "guess", "numeric", "numeric", "numeric","numeric")) |>
    #dropping Nas
   drop_na() |>
       #7/26/2023  9:20:00 AM
@@ -60,26 +57,26 @@ tide02_BHSE3 <- readxl::read_xlsx("data/678_LAC_0223.xlsx",
 
 
 #loading the combined xcel sheet 
-tide05_BHSE1 <- readxl::read_xlsx("data/211_LAC_0523.xlsx", 
-                               #skipping first line 
-                               skip=1)|>
+tide05_II <- readxl::read_xlsx("data/211_LAC_0523.xlsx", 
+ #skipping first line                            
+ skip=1)|>
    #dropping Nas
   drop_na()
 
-tide05_BHSE2 <- readxl::read_xlsx("data/372_LAC_0523.xlsx", 
+tide05_MI <- readxl::read_xlsx("data/372_LAC_0523.xlsx", 
                                #skipping first line 
                                skip=1) |>
    #dropping Nas
   drop_na()
 
-tide05_BHSE3 <- readxl::read_xlsx("data/678_LAC_0523.xlsx", 
+tide05_PA <- readxl::read_xlsx("data/678_LAC_0523.xlsx", 
                                #skipping first line 
                                skip=1) |>
    #dropping Nas
   drop_na()
 
 #loading the combined xcel sheet 
-tide07_BHSE1 <- readxl::read_xlsx("data/211_LAC_0723.xlsx", 
+tide07_II <- readxl::read_xlsx("data/211_LAC_0723.xlsx", 
                                #skipping first line 
                                skip=1) |>
    #dropping Nas
@@ -87,7 +84,7 @@ tide07_BHSE1 <- readxl::read_xlsx("data/211_LAC_0723.xlsx",
     #7/26/2023  9:20:00 AM
    filter(datetime > ymd_hms("2023-07-26 10:00:00"))
 
-tide07_BHSE2 <- readxl::read_xlsx("data/372_LAC_0723.xlsx", 
+tide07_MI <- readxl::read_xlsx("data/372_LAC_0723.xlsx", 
                                #skipping first line 
                                skip=1) |>
    #dropping Nas
@@ -95,7 +92,7 @@ tide07_BHSE2 <- readxl::read_xlsx("data/372_LAC_0723.xlsx",
     #7/26/2023  9:20:00 AM
    filter(datetime > ymd_hms("2023-07-26 10:00:00"))
 
-tide07_BHSE3 <- readxl::read_xlsx("data/678_LAC_0723.xlsx", 
+tide07_PA <- readxl::read_xlsx("data/678_LAC_0723.xlsx", 
                  #skipping first line 
                   skip=1) |>
             #dropping Nas
@@ -142,30 +139,101 @@ exp_time <- function(df) {
 
 }
 
+#function for replacing negative values  
+Clean.Depth <- function(df,cutoff) {
+  #returning the line of values with 0's replaced
+  return(test<-ifelse(
+    #if the value is less than or equal to 0.04 
+    df <= cutoff,
+    #replace with a zero (no water)
+    0,
+    #and if not, give it the old razzle dazzle (OG value of depth)
+    df))
+}
 ```
 
+Histrogram of values to cut ones that are"non neg"
+
+Site PA may need to be treated differently  0.02 cm seems to be the cutoff
+
+II and MI seem to have 0.045 cut off
+
+```{r}
+#site II
+hist(tide02_II$depth,
+     xlim=c(0.00,0.06),
+     breaks = 100)
+hist(tide02_II$depth,
+     xlim=c(0.03,0.06),
+     breaks = 100)
+
+#site MI
+hist(tide02_MI$depth,
+     xlim=c(0.00,0.06),
+     breaks = 100)
+hist(tide02_MI$depth,
+     xlim=c(0.04,0.06),
+     breaks = 100)
+
+#site PA
+hist(tide02_PA$depth,
+     xlim=c(0.00,0.06),
+     breaks = 100)
+hist(tide02_PA$depth,
+     xlim=c(0.01,0.035),
+     breaks = 100)
+
+#may 
+#site II
+hist(tide05_II$depth,xlim=c(0.00,0.06),breaks = 100)
+hist(tide05_II$depth,xlim=c(0.01,0.03), breaks = 100)
+
+#site MI
+hist(tide05_MI$depth,xlim=c(0.00,0.06), breaks = 100)
+hist(tide05_MI$depth,xlim=c(0.02,0.04),breaks = 100)
+
+#site PA
+hist(tide05_PA$depth, xlim=c(0.00,0.06),breaks = 100)
+hist(tide05_PA$depth,xlim=c(0.0,0.02), breaks = 100)
+
+#July
+#site II
+hist(tide07_II$depth,xlim=c(0.00,0.06),breaks = 100)
+hist(tide07_II$depth,xlim=c(0.01,0.03), breaks = 100)
+
+#site MI
+hist(tide07_MI$depth,xlim=c(0.00,0.06), breaks = 100)
+hist(tide07_MI$depth, xlim=c(0.02,0.04), breaks = 100)
+
+#site PA
+hist(tide07_PA$depth,xlim=c(0.00,0.06), breaks = 100)
+hist(tide07_PA$depth,xlim=c(0.0,0.02),breaks = 100)
+
+```
 
 ##data clean (scrub a dub dub)
-```{r}
-#febuary tides 
-tide02_BHSE1$depth<- noNegdepth(tide02_BHSE1$depth)
-tide02_BHSE2$depth<- noNegdepth(tide02_BHSE2$depth)
-tide02_BHSE3$depth<- noNegdepth(tide02_BHSE3$depth)
+cutoff values are from looking at histograms above
 
-#may tides 
-tide05_BHSE1$depth<- noNegdepth(tide05_BHSE1$depth)
-tide05_BHSE2$depth<- noNegdepth(tide05_BHSE2$depth)
-tide05_BHSE3$depth<- noNegdepth(tide05_BHSE3$depth)
+```{r}
+#febuary Tides
+tide02_II$depth<- Clean.Depth(tide02_II$depth, 0.045)
+tide02_MI$depth<- Clean.Depth(tide02_MI$depth, 0.045)
+tide02_PA$depth<- Clean.Depth(tide02_PA$depth, 0.015)
+
+#may tides
+tide05_II$depth<- Clean.Depth(tide05_II$depth, 0.0215)
+tide05_MI$depth<- Clean.Depth(tide05_MI$depth, 0.03)
+tide05_PA$depth<- Clean.Depth(tide05_PA$depth, 0.01)
+
 
 #july tides
-tide07_BHSE1$depth<- noNegdepth(tide07_BHSE1$depth)
-tide07_BHSE2$depth<- noNegdepth(tide07_BHSE2$depth)
-tide07_BHSE3$depth<- noNegdepth(tide07_BHSE3$depth)
+tide07_II$depth<- Clean.Depth(tide07_II$depth, 0.02)
+tide07_MI$depth<- Clean.Depth(tide07_MI$depth, 0.03)
+tide07_PA$depth<- Clean.Depth(tide07_PA$depth, 0.01)
 
 ```
 
-
-start times for experiments:
+Start of experiment times
 
 Feb
 all -2/13/2023  8:37:00 AM
@@ -178,17 +246,17 @@ July
 all - 7/26/2023  9:20:00 AM
 
 ```{r}
-tide02_BHSE1$exp_time<- exp_time(tide02_BHSE1$datetime)
-tide02_BHSE2$exp_time<- exp_time(tide02_BHSE2$datetime)
-tide02_BHSE3$exp_time<- exp_time(tide02_BHSE3$datetime)
+tide02_II$exp_time<- exp_time(tide02_II$datetime)
+tide02_MI$exp_time<- exp_time(tide02_MI$datetime)
+tide02_PA$exp_time<- exp_time(tide02_PA$datetime)
 
-tide05_BHSE1$exp_time<- exp_time(tide05_BHSE1$datetime)
-tide05_BHSE2$exp_time<- exp_time(tide05_BHSE2$datetime)
-tide05_BHSE3$exp_time<- exp_time(tide05_BHSE3$datetime)
+tide05_II$exp_time<- exp_time(tide05_II$datetime)
+tide05_MI$exp_time<- exp_time(tide05_MI$datetime)
+tide05_PA$exp_time<- exp_time(tide05_PA$datetime)
 
-tide07_BHSE1$exp_time<- exp_time(tide07_BHSE1$datetime)
-tide07_BHSE2$exp_time<- exp_time(tide07_BHSE2$datetime)
-tide07_BHSE3$exp_time<- exp_time(tide07_BHSE3$datetime)
+tide07_II$exp_time<- exp_time(tide07_II$datetime)
+tide07_MI$exp_time<- exp_time(tide07_MI$datetime)
+tide07_PA$exp_time<- exp_time(tide07_PA$datetime)
 
 ```
 
@@ -197,19 +265,19 @@ tide07_BHSE3$exp_time<- exp_time(tide07_BHSE3$datetime)
 ```{r}
 #getting rolling means for 
 #feb
-tide02_meanline_BHSE1<- GimmeMeanLine(tide02_BHSE1$depth)
-tide02_meanline_BHSE2<- GimmeMeanLine(tide02_BHSE2$depth)
-tide02_meanline_BHSE3<- GimmeMeanLine(tide02_BHSE3$depth)
+tide02_meanline_II<- GimmeMeanLine(tide02_II$depth)
+tide02_meanline_MI<- GimmeMeanLine(tide02_MI$depth)
+tide02_meanline_PA<- GimmeMeanLine(tide02_PA$depth)
 
 #may
-tide05_meanline_BHSE1<- GimmeMeanLine(tide05_BHSE1$depth)
-tide05_meanline_BHSE2<- GimmeMeanLine(tide05_BHSE2$depth)
-tide05_meanline_BHSE3<- GimmeMeanLine(tide05_BHSE3$depth)
+tide05_meanline_II<- GimmeMeanLine(tide05_II$depth)
+tide05_meanline_MI<- GimmeMeanLine(tide05_MI$depth)
+tide05_meanline_PA<- GimmeMeanLine(tide05_PA$depth)
 
 #July
-tide07_meanline_BHSE1<- GimmeMeanLine(tide07_BHSE1$depth)
-tide07_meanline_BHSE2<- GimmeMeanLine(tide07_BHSE2$depth)
-tide07_meanline_BHSE3<- GimmeMeanLine(tide07_BHSE3$depth)
+tide07_meanline_II<- GimmeMeanLine(tide07_II$depth)
+tide07_meanline_MI<- GimmeMeanLine(tide07_MI$depth)
+tide07_meanline_PA<- GimmeMeanLine(tide07_PA$depth)
  
 ```
 
@@ -229,21 +297,19 @@ cleanDateX <-
 
 July.m.tide <-ggplot() +
 #average mean line
-  geom_line(aes(tide07_BHSE1$datetime,tide07_meanline_BHSE1), color="#8FBC8F",linewidth=0.5)+
-   #bhse3
-   geom_line(aes(tide07_BHSE3$datetime,tide07_meanline_BHSE3), color="#CDCD00",linewidth=0.5)+
-   #bhse2
-   geom_line(aes(tide07_BHSE2$datetime,tide07_meanline_BHSE2), color="#CD9B9B",linewidth=0.5)+
   
+     geom_line(aes(tide07_II$datetime,tide07_meanline_II), color="#CDCD00",linewidth=0.5)+
+  
+      geom_line(aes(tide07_MI$datetime,tide07_meanline_MI), color="#8FBC8F",linewidth=0.5)+
+  
+   geom_line(aes(tide07_PA$datetime,tide07_meanline_PA), color="#CD9B9B",linewidth=0.5)+
+   #PA
  # cleanDateX +
    #scaling the Y axis to all reflect same range
   scale_y_continuous(limits=c(-0.025,0.43))+ 
   
-  labs(
-    x=NULL,
-    y=NULL,
-    title=NULL) +
-    
+  labs(x=NULL, y=NULL, title=NULL) +
+  
   theme_bw() +
   theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
   
@@ -262,12 +328,12 @@ July.m.tide
 ```{r}
 May.m.tide <-ggplot() +
 #average mean line
-   #bhse2
-   geom_line(aes(tide05_BHSE2$datetime,tide05_meanline_BHSE2), color="#CD9B9B", linewidth=0.5)+
-     #bhse3
-   geom_line(aes(tide05_BHSE3$datetime,tide05_meanline_BHSE3), color="#CDCD00", linewidth=0.5)+
+   #MI
+   geom_line(aes(tide05_PA$datetime,tide05_meanline_PA), color="#CD9B9B", linewidth=0.5)+
+     #PA
+   geom_line(aes(tide05_II$datetime,tide05_meanline_II), color="#CDCD00", linewidth=0.5)+
   
-  geom_line(aes(tide05_BHSE1$datetime,tide05_meanline_BHSE1), color="#8FBC8F", linewidth=0.5)+
+  geom_line(aes(tide05_MI$datetime,tide05_meanline_MI), color="#8FBC8F", linewidth=0.5)+
 
   #cleanDateX +
    #scaling the Y axis to all reflect same range
@@ -296,14 +362,12 @@ May.m.tide
 ```{r}
 Feb.m.tide <- ggplot() +
 #average mean line
-
-   #bhse2
-   geom_line(aes(tide02_BHSE2$datetime,tide02_meanline_BHSE2), color="#CD9B9B", linewidth=0.5)+ 
-     #bhse3
-   geom_line(aes(tide02_BHSE3$datetime,tide02_meanline_BHSE3), color="#CDCD00", linewidth=0.5)+
-  
-  geom_line(aes(tide02_BHSE1$datetime,tide02_meanline_BHSE1), color="#8FBC8F", linewidth=0.5)+
-  
+  #_II
+   geom_line(aes(tide02_II$datetime,tide02_meanline_II), color="#CDCD00", linewidth=0.5)+
+  #MI
+  geom_line(aes(tide02_MI$datetime,tide02_meanline_MI), color="#8FBC8F", linewidth=0.5)+
+  #PA
+   geom_line(aes(tide02_PA$datetime,tide02_meanline_PA), color="#CD9B9B", linewidth=0.5)+ 
   #cleanDateX +
    #scaling the Y axis to all reflect same range
   scale_y_continuous(limits=c(-0.025,0.43))+ 
@@ -330,7 +394,6 @@ Feb.m.tide
 ##all together now!
 ```{r}
 
-
 #plotting all of them 
 plot_grid(Feb.m.tide,May.m.tide,July.m.tide,
           #making tide height the same
@@ -339,10 +402,47 @@ plot_grid(Feb.m.tide,May.m.tide,July.m.tide,
           #in three rows
           nrow=3)
 
-#ggsave("allTideJan07.pdf", width = 5, height = 3)
+ggsave("allTide_clean.pdf", width = 5, height = 3)
 
 
 ```
 
+```{r}
+# island interior 
+max(tide02_II$depth)
+max(tide05_II$depth)
+max(tide07_II$depth)
 
+#% time out of water  (exposed)
+#filtering so when depth >0 (underwater) / total number of measurements 
+nrow(tide02_II|> filter(depth > 0))/nrow(tide02_II) * 100
+nrow(tide05_II|> filter(depth >0)) / nrow(tide05_II) *100 
+nrow(tide07_II|> filter(depth > 0)) / nrow(tide07_II) *100 
+
+```
+
+```{r}
+#MANGROVE interior
+max(tide02_MI$depth)
+max(tide05_MI$depth)
+max(tide07_MI$depth)
+
+#% time out of water  (exposed)
+#filtering so when depth >0 (underwater) / total number of measurements 
+nrow(tide02_MI|> filter(depth > 0)) / nrow(tide02_MI) * 100
+nrow(tide05_MI|> filter(depth > 0)) / nrow(tide05_MI) * 100 
+nrow(tide07_MI|> filter(depth > 0)) / nrow(tide07_MI) *100 
+```
+
+```{r}
+# island interior 
+max(tide02_PA$depth)
+max(tide05_PA$depth)
+max(tide07_PA$depth)
+
+#filtering so when depth >0 (underwater) / total number of measurements 
+nrow(tide02_PA|> filter(depth > 0))/ nrow(tide02_PA) * 100
+nrow(tide05_PA|> filter(depth >0)) / nrow(tide05_PA) *100 
+nrow(tide07_PA|> filter(depth > 0)) / nrow(tide07_PA) *100 
+```
 
